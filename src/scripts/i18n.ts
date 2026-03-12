@@ -21,6 +21,7 @@ export interface Translations {
   taskName: string;
   progress: string;
   commands: string;
+  animationSettings: string;
   typingAnimation: string;
   cursorBlink: string;
   typingSpeed: string;
@@ -64,6 +65,7 @@ const translations: Record<Lang, Translations> = {
     taskName: '训练任务名称',
     progress: '训练进度 (%)',
     commands: '🔧 显示的命令',
+    animationSettings: '🎬 动画设置',
     typingAnimation: '打字动画',
     cursorBlink: '光标闪烁',
     typingSpeed: '打字速度 (ms)',
@@ -105,6 +107,7 @@ const translations: Record<Lang, Translations> = {
     taskName: 'Training Job Name',
     progress: 'Progress (%)',
     commands: '🔧 Commands',
+    animationSettings: '🎬 Animation',
     typingAnimation: 'Typing animation',
     cursorBlink: 'Cursor blink',
     typingSpeed: 'Typing speed (ms)',
