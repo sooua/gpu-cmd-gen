@@ -1,0 +1,307 @@
+---
+import Layout from '../layouts/Layout.astro';
+import TopNav from '../components/TopNav.astro';
+import ConfigPanel from '../components/ConfigPanel.astro';
+import CommandSelector from '../components/CommandSelector.astro';
+import TerminalPreview from '../components/TerminalPreview.astro';
+---
+
+<Layout>
+  <div class="container">
+    <TopNav />
+
+    <ConfigPanel />
+    <CommandSelector />
+    <TerminalPreview />
+
+    <footer>
+      <p>
+        <span data-lang-key="footer1">Made with ❤️ by</span>
+        <a href="https://sevion.me" target="_blank" rel="noopener noreferrer">Sevion</a>
+      </p>
+      <p style="margin-top: 8px;">
+        <a
+          href="https://github.com/sooua/gpu-cmd-gen"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-lang-key="footer2"
+        >
+          View on GitHub
+        </a>
+      </p>
+    </footer>
+  </div>
+</Layout>
+
+<script>
+  import { PRESETS, DEFAULT_CONFIG, GPU_SPECS } from '../scripts/presets.ts';
+  import type { Config, CustomCommand } from '../scripts/presets.ts';
+  import { renderTerminal, generateDownloadableHTML } from '../scripts/renderer.ts';
+  import { downloadHTML, downloadImage } from '../scripts/downloader.ts';
+  import { encodeConfigToURL, decodeConfigFromURL, copyToClipboard } from '../scripts/shareLink.ts';
+  import { applyLanguage } from '../scripts/i18n.ts';
+  import type { Lang } from '../scripts/i18n.ts';
+
+  // ---- State ----
+  let selectedCommands: string[] = ['nvidia-smi', 'squeue'];
+  let currentConfig: Config | null = null;
+  let currentLang: Lang = 'zh';
+
+  // ---- Helpers ----
+  function getConfig(): Config {
+    const username  = (document.getElementById('username') as HTMLInputElement).value.trim() || 'admin';
+    const hostname  = (document.getElementById('hostname') as HTMLInputElement).value.trim() || 'gpu-server-01';
+    const gpuModel  = (document.getElementById('gpuModel') as HTMLSelectElement).value;
+    const gpuCount  = parseInt((document.getElementById('gpuCount') as HTMLInputElement).value) || 1;
+    const cpuCores  = parseInt((document.getElementById('cpuCores') as HTMLInputElement).value) || 64;
+    const memory    = parseInt((document.getElementById('memory') as HTMLInputElement).value) || 256;
+    const taskName  = (document.getElementById('taskName') as HTMLInputElement).value.trim() || 'model-training';
+    const progress  = parseInt((document.getElementById('progress') as HTMLInputElement).value) || 0;
+    const enableTyping = (document.getElementById('enableTyping') as HTMLInputElement).checked;
+    const enableCursor = (document.getElementById('enableCursor') as HTMLInputElement).checked;
+    const typingSpeed  = parseInt((document.getElementById('typingSpeed') as HTMLInputElement).value) || 30;
+
+    // Custom commands
+    const customCommands: CustomCommand[] = [];
+    document.querySelectorAll<HTMLElement>('.custom-cmd-row').forEach((row) => {
+      const cmd    = (row.querySelector('.custom-cmd-input') as HTMLInputElement).value;
+      const output = (row.querySelector('.custom-cmd-output') as HTMLTextAreaElement).value;
+      customCommands.push({ cmd, output });
+    });
+
+    return {
+      username, hostname, gpuModel, gpuCount, cpuCores, memory,
+      taskName, progress, enableTyping, enableCursor, typingSpeed, customCommands,
+    };
+  }
+
+  function setFormValues(config: Partial<Config>): void {
+    if (config.username !== undefined)
+      (document.getElementById('username') as HTMLInputElement).value = config.username;
+    if (config.hostname !== undefined)
+      (document.getElementById('hostname') as HTMLInputElement).value = config.hostname;
+    if (config.gpuModel !== undefined)
+      (document.getElementById('gpuModel') as HTMLSelectElement).value = config.gpuModel;
+    if (config.gpuCount !== undefined)
+      (document.getElementById('gpuCount') as HTMLInputElement).value = String(config.gpuCount);
+    if (config.cpuCores !== undefined)
+      (document.getElementById('cpuCores') as HTMLInputElement).value = String(config.cpuCores);
+    if (config.memory !== undefined)
+      (document.getElementById('memory') as HTMLInputElement).value = String(config.memory);
+    if (config.taskName !== undefined)
+      (document.getElementById('taskName') as HTMLInputElement).value = config.taskName;
+    if (config.progress !== undefined)
+      (document.getElementById('progress') as HTMLInputElement).value = String(config.progress);
+    if (config.enableTyping !== undefined)
+      (document.getElementById('enableTyping') as HTMLInputElement).checked = config.enableTyping;
+    if (config.enableCursor !== undefined)
+      (document.getElementById('enableCursor') as HTMLInputElement).checked = config.enableCursor;
+    if (config.typingSpeed !== undefined)
+      (document.getElementById('typingSpeed') as HTMLInputElement).value = String(config.typingSpeed);
+
+    if (config.customCommands && config.customCommands.length > 0) {
+      config.customCommands.forEach((cc) => addCustomCommandRow(cc.cmd, cc.output));
+    }
+  }
+
+  function setSelectedCommands(cmds: string[]): void {
+    selectedCommands = cmds;
+    document.querySelectorAll<HTMLElement>('.command-chip').forEach((chip) => {
+      const cmd = chip.dataset.cmd!;
+      chip.classList.toggle('selected', selectedCommands.includes(cmd));
+    });
+  }
+
+  function showToast(msg: string, duration = 2500): void {
+    const toast = document.getElementById('toast')!;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+  }
+
+  // ---- Custom Commands ----
+  function addCustomCommandRow(cmdVal = '', outputVal = ''): void {
+    const list = document.getElementById('customCommandsList')!;
+    const row = document.createElement('div');
+    row.className = 'custom-command-row custom-cmd-row';
+    row.innerHTML = `
+      <input
+        class="custom-cmd-input"
+        type="text"
+        placeholder="${currentLang === 'zh' ? '命令 (如: ls -la)' : 'Command (e.g.: ls -la)'}"
+        value="${cmdVal.replace(/"/g, '&quot;')}"
+        autocomplete="off"
+      />
+      <textarea
+        class="custom-cmd-output"
+        placeholder="${currentLang === 'zh' ? '命令输出内容...' : 'Command output...'}"
+        rows="3"
+      >${outputVal}</textarea>
+      <button class="btn-remove" type="button" data-lang-key="remove">删除</button>
+    `;
+    row.querySelector('.btn-remove')!.addEventListener('click', () => row.remove());
+    list.appendChild(row);
+  }
+
+  // ---- Reset ----
+  function resetConfig(): void {
+    setFormValues(DEFAULT_CONFIG);
+    setSelectedCommands(['nvidia-smi', 'squeue']);
+    document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+    document.getElementById('customCommandsList')!.innerHTML = '';
+    document.getElementById('terminalContainer')!.classList.remove('show');
+    currentConfig = null;
+  }
+
+  // ---- Theme ----
+  function applyTheme(theme: 'dark' | 'light'): void {
+    document.body.classList.toggle('light-theme', theme === 'light');
+    localStorage.setItem('theme', theme);
+
+    const icon = document.getElementById('themeIcon')!;
+    if (theme === 'light') {
+      // Moon icon
+      icon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+    } else {
+      // Sun icon
+      icon.innerHTML = `
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      `;
+    }
+  }
+
+  // ---- Event Wiring ----
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Restore preferences ---
+    const savedTheme = (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
+    applyTheme(savedTheme);
+
+    currentLang = (localStorage.getItem('lang') as Lang) || 'zh';
+    applyLanguage(currentLang);
+
+    // --- Load from URL params ---
+    const decoded = decodeConfigFromURL();
+    if (decoded) {
+      setFormValues(decoded.config);
+      setSelectedCommands(decoded.selectedCommands);
+    }
+
+    // --- Presets ---
+    document.querySelectorAll<HTMLElement>('.preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const presetKey = btn.dataset.preset!;
+        if (PRESETS[presetKey]) {
+          setFormValues(PRESETS[presetKey]);
+        }
+      });
+    });
+
+    // --- Command chips ---
+    document.querySelectorAll<HTMLElement>('.command-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('selected');
+        const cmd = chip.dataset.cmd!;
+        if (chip.classList.contains('selected')) {
+          if (!selectedCommands.includes(cmd)) selectedCommands.push(cmd);
+        } else {
+          selectedCommands = selectedCommands.filter((c) => c !== cmd);
+        }
+      });
+    });
+
+    // --- Add custom command ---
+    document.getElementById('addCustomCmd')!.addEventListener('click', () => {
+      addCustomCommandRow();
+    });
+
+    // --- Generate ---
+    document.getElementById('generateBtn')!.addEventListener('click', async () => {
+      currentConfig = getConfig();
+      await renderTerminal(currentConfig, selectedCommands);
+    });
+
+    // --- Share link ---
+    document.getElementById('shareBtn')!.addEventListener('click', async () => {
+      const config = getConfig();
+      const url = encodeConfigToURL(config, selectedCommands);
+      const ok = await copyToClipboard(url);
+      showToast(ok
+        ? (currentLang === 'zh' ? '✅ 链接已复制！' : '✅ Link copied!')
+        : (currentLang === 'zh' ? '❌ 复制失败' : '❌ Copy failed')
+      );
+    });
+
+    // --- Download HTML (before generate) ---
+    document.getElementById('downloadBtn')!.addEventListener('click', () => {
+      const config = getConfig();
+      const html = generateDownloadableHTML(config, selectedCommands);
+      downloadHTML(html, `terminal-${config.username}-${config.hostname}-${Date.now()}.html`);
+    });
+
+    // --- Download HTML (after generate) ---
+    document.getElementById('downloadBtn2')!.addEventListener('click', () => {
+      if (!currentConfig) {
+        showToast(currentLang === 'zh' ? '请先生成终端！' : 'Please generate terminal first!');
+        return;
+      }
+      const html = generateDownloadableHTML(currentConfig, selectedCommands);
+      downloadHTML(html, `terminal-${currentConfig.username}-${currentConfig.hostname}-${Date.now()}.html`);
+    });
+
+    // --- Download PNG ---
+    document.getElementById('downloadPngBtn')!.addEventListener('click', async () => {
+      if (!currentConfig) {
+        showToast(currentLang === 'zh' ? '请先生成终端！' : 'Please generate terminal first!');
+        return;
+      }
+      await downloadImage(
+        'terminal',
+        `terminal-${currentConfig.username}-${currentConfig.hostname}.png`
+      );
+    });
+
+    // --- Reset ---
+    document.getElementById('resetBtn')!.addEventListener('click', resetConfig);
+
+    // --- Theme toggle ---
+    document.getElementById('themeToggle')!.addEventListener('click', () => {
+      const isLight = document.body.classList.contains('light-theme');
+      applyTheme(isLight ? 'dark' : 'light');
+    });
+
+    // --- Language toggle ---
+    const langBtn = document.getElementById('langBtn')!;
+    const langDropdown = document.getElementById('langDropdown')!;
+
+    langBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = langDropdown.classList.toggle('show');
+      langBtn.setAttribute('aria-expanded', String(open));
+    });
+
+    document.addEventListener('click', () => {
+      langDropdown.classList.remove('show');
+      langBtn.setAttribute('aria-expanded', 'false');
+    });
+
+    document.querySelectorAll<HTMLElement>('.lang-option').forEach((opt) => {
+      opt.addEventListener('click', () => {
+        currentLang = opt.dataset.lang as Lang;
+        applyLanguage(currentLang);
+        localStorage.setItem('lang', currentLang);
+        langDropdown.classList.remove('show');
+      });
+    });
+  });
+</script>

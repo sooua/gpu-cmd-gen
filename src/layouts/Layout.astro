@@ -1,0 +1,40 @@
+---
+import '../styles/global.css';
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'GPU-Cmd-Gen',
+  description = 'Generate realistic Ubuntu terminal interfaces — GPU servers, HPC clusters, and more',
+} = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <meta name="keywords" content="GPU, Terminal, Generator, NVIDIA, SLURM, HPC, AI, nvidia-smi" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <slot />
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+</body>
+</html>

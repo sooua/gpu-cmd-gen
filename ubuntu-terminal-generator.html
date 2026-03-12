@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu Terminal Generator - 终端模拟器生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .config-panel {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .preset-btn {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .preset-btn:hover {
+            border-color: #666;
+            background: #222;
+        }
+
+        .preset-btn.active {
+            border-color: #0070f3;
+            background: #0a1929;
+        }
+
+        .preset-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .preset-desc {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        input, select, textarea {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0070f3;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .command-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .command-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .command-chip {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .command-chip:hover {
+            border-color: #666;
+        }
+
+        .command-chip.selected {
+            background: #0070f3;
+            border-color: #0070f3;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #eee;
+        }
+
+        button.secondary {
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+        }
+
+        button.secondary:hover {
+            background: #222;
+        }
+
+        .terminal-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .terminal-container.show {
+            display: block;
+        }
+
+        .terminal-header {
+            background: #2d2d2d;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-btn.close { background: #ff5f56; }
+        .terminal-btn.minimize { background: #ffbd2e; }
+        .terminal-btn.maximize { background: #27c93f; }
+
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .terminal {
+            background: #300a24;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #fff;
+            overflow-x: auto;
+            min-height: 500px;
+        }
+
+        .terminal-line {
+            margin-bottom: 2px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .prompt {
+            color: #8ae234;
+        }
+
+        .command {
+            color: #fff;
+        }
+
+        .output {
+            color: #d3d7cf;
+        }
+
+        .header-text {
+            color: #729fcf;
+        }
+
+        .warning {
+            color: #fce94f;
+        }
+
+        .success {
+            color: #8ae234;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #fff;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .typing {
+            display: inline;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .presets {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #444;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #8ae234;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .animate-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            align-items: center;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖥️ Ubuntu Terminal Generator</h1>
+        <p class="subtitle">生成逼真的Ubuntu终端界面 - 支持超算集群、GPU服务器等多种预设</p>
+
+        <div class="config-panel">
+            <div class="section-title">📦 快速预设</div>
+            <div class="presets" id="presets">
+                <div class="preset-btn" data-preset="rtx4090">
+                    <div class="preset-name">🎮 RTX 4090 工作站</div>
+                    <div class="preset-desc">单卡 24GB 显存，适合个人开发</div>
+                </div>
+                <div class="preset-btn" data-preset="startup">
+                    <div class="preset-name">🚀 AI创业公司</div>
+                    <div class="preset-desc">8卡 A100 服务器</div>
+                </div>
+                <div class="preset-btn" data-preset="h200">
+                    <div class="preset-name">⚡ 顶级单机</div>
+                    <div class="preset-desc">8卡 H200 超级服务器</div>
+                </div>
+                <div class="preset-btn" data-preset="cluster">
+                    <div class="preset-name">🏢 超算集群</div>
+                    <div class="preset-desc">万卡级别训练集群</div>
+                </div>
+            </div>
+
+            <div class="section-title">⚙️ 自定义配置</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="username" value="admin" placeholder="admin">
+                </div>
+                <div class="form-group">
+                    <label>主机名</label>
+                    <input type="text" id="hostname" value="gpu-server-01" placeholder="gpu-server-01">
+                </div>
+                <div class="form-group">
+                    <label>GPU型号</label>
+                    <select id="gpuModel">
+                        <option value="RTX 4090">RTX 4090</option>
+                        <option value="A100">A100 80GB</option>
+                        <option value="H100">H100 80GB</option>
+                        <option value="H200">H200 141GB</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>GPU数量</label>
+                    <input type="number" id="gpuCount" value="1" min="1" max="16384">
+                </div>
+                <div class="form-group">
+                    <label>CPU核心数</label>
+                    <input type="number" id="cpuCores" value="64" min="1">
+                </div>
+                <div class="form-group">
+                    <label>内存 (GB)</label>
+                    <input type="number" id="memory" value="256" min="1">
+                </div>
+                <div class="form-group">
+                    <label>训练任务名称</label>
+                    <input type="text" id="taskName" value="GPT-5.1-pretrain" placeholder="model-training">
+                </div>
+                <div class="form-group">
+                    <label>训练进度 (%)</label>
+                    <input type="number" id="progress" value="45" min="0" max="100">
+                </div>
+            </div>
+
+            <div class="command-section">
+                <div class="section-title">🔧 显示的命令</div>
+                <div class="command-list" id="commandList">
+                    <div class="command-chip selected" data-cmd="nvidia-smi">nvidia-smi</div>
+                    <div class="command-chip selected" data-cmd="squeue">squeue (SLURM)</div>
+                    <div class="command-chip" data-cmd="top">top</div>
+                    <div class="command-chip" data-cmd="htop">htop</div>
+                    <div class="command-chip" data-cmd="df">df -h</div>
+                    <div class="command-chip" data-cmd="free">free -h</div>
+                    <div class="command-chip" data-cmd="lscpu">lscpu</div>
+                    <div class="command-chip" data-cmd="uptime">uptime</div>
+                </div>
+
+                <div class="animate-options">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enableTyping" checked>
+                        <label for="enableTyping">打字动画</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enableCursor" checked>
+                        <label for="enableCursor">光标闪烁</label>
+                    </div>
+                    <div class="form-group" style="flex: 1; max-width: 200px;">
+                        <label>打字速度 (ms)</label>
+                        <input type="number" id="typingSpeed" value="30" min="10" max="200">
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button id="generateBtn">🚀 生成终端</button>
+                <button class="secondary" id="downloadBtn">💾 下载 HTML</button>
+                <button class="secondary" id="resetBtn">🔄 重置配置</button>
+            </div>
+        </div>
+
+        <div class="terminal-container" id="terminalContainer">
+            <div class="terminal-header">
+                <div class="terminal-btn close"></div>
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+                <div class="terminal-title" id="terminalHeaderTitle">ubuntu@terminal</div>
+            </div>
+            <div class="terminal" id="terminal"></div>
+            <div class="download-section">
+                <button id="downloadBtn2">💾 下载终端 HTML</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const presets = {
+            rtx4090: {
+                username: 'developer',
+                hostname: 'workstation',
+                gpuModel: 'RTX 4090',
+                gpuCount: 1,
+                cpuCores: 32,
+                memory: 128,
+                taskName: 'stable-diffusion-training',
+                progress: 67
+            },
+            startup: {
+                username: 'admin',
+                hostname: 'ai-cluster-01',
+                gpuModel: 'A100',
+                gpuCount: 8,
+                cpuCores: 128,
+                memory: 1024,
+                taskName: 'LLaMA-3-70B-finetune',
+                progress: 82
+            },
+            h200: {
+                username: 'root',
+                hostname: 'dgx-h200',
+                gpuModel: 'H200',
+                gpuCount: 8,
+                cpuCores: 224,
+                memory: 2048,
+                taskName: 'multimodal-foundation-model',
+                progress: 34
+            },
+            cluster: {
+                username: 'sysadmin',
+                hostname: 'hpc-master',
+                gpuModel: 'H200',
+                gpuCount: 16384,
+                cpuCores: 262144,
+                memory: 4194304,
+                taskName: 'GPT-5.1-pretrain',
+                progress: 45
+            }
+        };
+
+        const gpuSpecs = {
+            'RTX 4090': { vram: 24, tflops: 82.6 },
+            'A100': { vram: 80, tflops: 312 },
+            'H100': { vram: 80, tflops: 989 },
+            'H200': { vram: 141, tflops: 989 }
+        };
+
+        let selectedCommands = ['nvidia-smi', 'squeue'];
+        let currentConfig = {};
+
+        // 预设按钮点击
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const preset = presets[btn.dataset.preset];
+                applyPreset(preset);
+            });
+        });
+
+        // 命令选择
+        document.querySelectorAll('.command-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                chip.classList.toggle('selected');
+                const cmd = chip.dataset.cmd;
+                if (chip.classList.contains('selected')) {
+                    if (!selectedCommands.includes(cmd)) {
+                        selectedCommands.push(cmd);
+                    }
+                } else {
+                    selectedCommands = selectedCommands.filter(c => c !== cmd);
+                }
+            });
+        });
+
+        function applyPreset(preset) {
+            Object.keys(preset).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) input.value = preset[key];
+            });
+        }
+
+        function getConfig() {
+            return {
+                username: document.getElementById('username').value,
+                hostname: document.getElementById('hostname').value,
+                gpuModel: document.getElementById('gpuModel').value,
+                gpuCount: parseInt(document.getElementById('gpuCount').value),
+                cpuCores: parseInt(document.getElementById('cpuCores').value),
+                memory: parseInt(document.getElementById('memory').value),
+                taskName: document.getElementById('taskName').value,
+                progress: parseInt(document.getElementById('progress').value),
+                enableTyping: document.getElementById('enableTyping').checked,
+                enableCursor: document.getElementById('enableCursor').checked,
+                typingSpeed: parseInt(document.getElementById('typingSpeed').value)
+            };
+        }
+
+        function generateTerminalContent(config) {
+            const gpu = gpuSpecs[config.gpuModel];
+            const totalVRAM = gpu.vram * config.gpuCount;
+            const totalTFLOPS = gpu.tflops * config.gpuCount;
+            const prompt = `<span class="prompt">${config.username}@${config.hostname}</span>:<span class="header-text">~</span>$ `;
+
+            let content = [];
+
+            // 系统信息
+            content.push({
+                type: 'prompt',
+                text: `${config.username}@${config.hostname}:~$ `,
+                command: 'uname -a'
+            });
+            content.push({
+                type: 'output',
+                text: `Linux ${config.hostname} 5.15.0-91-generic #101-Ubuntu SMP x86_64 GNU/Linux`
+            });
+            content.push({ type: 'empty' });
+
+            // nvidia-smi
+            if (selectedCommands.includes('nvidia-smi')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'nvidia-smi'
+                });
+                content.push({
+                    type: 'output',
+                    text: generateNvidiaSmi(config, gpu, totalVRAM)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            // SLURM squeue
+            if (selectedCommands.includes('squeue')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'squeue -u ' + config.username
+                });
+                content.push({
+                    type: 'output',
+                    text: generateSqueue(config)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            // top
+            if (selectedCommands.includes('top')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'top -bn1 | head -20'
+                });
+                content.push({
+                    type: 'output',
+                    text: generateTop(config)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            // htop
+            if (selectedCommands.includes('htop')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'htop --version'
+                });
+                content.push({
+                    type: 'output',
+                    text: generateHtop(config)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            // df -h
+            if (selectedCommands.includes('df')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'df -h'
+                });
+                content.push({
+                    type: 'output',
+                    text: generateDf(config)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            // free -h
+            if (selectedCommands.includes('free')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'free -h'
+                });
+                content.push({
+                    type: 'output',
+                    text: generateFree(config)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            // lscpu
+            if (selectedCommands.includes('lscpu')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'lscpu | head -15'
+                });
+                content.push({
+                    type: 'output',
+                    text: generateLscpu(config)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            // uptime
+            if (selectedCommands.includes('uptime')) {
+                content.push({
+                    type: 'prompt',
+                    text: `${config.username}@${config.hostname}:~$ `,
+                    command: 'uptime'
+                });
+                content.push({
+                    type: 'output',
+                    text: generateUptime(config)
+                });
+                content.push({ type: 'empty' });
+            }
+
+            return content;
+        }
+
+        function generateNvidiaSmi(config, gpu, totalVRAM) {
+            const date = new Date().toUTCString();
+            let output = `Sat Nov 29 ${new Date().toTimeString().split(' ')[0]} 2025
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.54.15              Driver Version: 550.54.15      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+`;
+            for (let i = 0; i < Math.min(config.gpuCount, 8); i++) {
+                const util = 95 + Math.floor(Math.random() * 5);
+                const memUsed = Math.floor(gpu.vram * 0.95);
+                const temp = 65 + Math.floor(Math.random() * 15);
+                const power = Math.floor(gpu.vram * 4.5 * (0.9 + Math.random() * 0.1));
+                const powerCap = Math.floor(gpu.vram * 5);
+                output += `|   ${i}  ${config.gpuModel.padEnd(21)}    On  |   00000000:${(0x80 + i).toString(16).toUpperCase()}:00.0 Off |                    0 |
+| ${(30 + Math.floor(Math.random() * 40)).toString().padStart(2)}%   ${temp}C    P0         ${power}W / ${powerCap}W |    ${memUsed}GiB / ${gpu.vram}GiB |    ${util}%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+`;
+            }
+
+            if (config.gpuCount > 8) {
+                output += `... (${config.gpuCount - 8} more GPUs)\n\n`;
+                output += `<span class="success">Total GPU Count: ${config.gpuCount}</span>
+<span class="success">Total VRAM: ${totalVRAM} GB (${(totalVRAM / 1024).toFixed(2)} TB)</span>
+<span class="success">Total Compute: ${(totalVRAM * 4.5 * config.gpuCount / 1000).toFixed(2)} MW Peak Power</span>\n`;
+            }
+
+            output += `
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A     12847      C   python3 ${config.taskName}                  ${Math.floor(gpu.vram * 0.95)}GiB |
++-----------------------------------------------------------------------------------------+`;
+
+            return output;
+        }
+
+        function generateSqueue(config) {
+            const runtime = `${Math.floor(Math.random() * 10) + 1}-${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+            return `             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+           1847293       gpu ${config.taskName.substring(0, 8)}  ${config.username}  R   ${runtime}    ${Math.ceil(config.gpuCount / 8)} node[001-${String(Math.ceil(config.gpuCount / 8)).padStart(3, '0')}]
+
+<span class="header-text">Job Status:</span>
+  Task: ${config.taskName}
+  Progress: <span class="success">${config.progress}%</span> [${Array(Math.floor(config.progress / 2)).fill('█').join('')}${Array(50 - Math.floor(config.progress / 2)).fill('░').join('')}]
+  GPU Utilization: <span class="success">98.${Math.floor(Math.random() * 10)}%</span>
+  Estimated Time Remaining: ${Math.floor((100 - config.progress) * 0.5)} hours`;
+        }
+
+        function generateTop(config) {
+            const uptime = Math.floor(Math.random() * 30) + 1;
+            const loadAvg = (config.cpuCores * 0.8).toFixed(2);
+            return `top - ${new Date().toTimeString().split(' ')[0]} up ${uptime} days, ${Math.floor(Math.random() * 24)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}, 3 users,  load average: ${loadAvg}, ${loadAvg}, ${loadAvg}
+Tasks: ${120 + Math.floor(Math.random() * 50)} total,   ${Math.floor(Math.random() * 3) + 1} running, ${117 + Math.floor(Math.random() * 50)} sleeping,   0 stopped,   0 zombie
+%Cpu(s): ${(85 + Math.random() * 10).toFixed(1)} us,  ${(5 + Math.random() * 3).toFixed(1)} sy,  0.0 ni, ${(8 - Math.random() * 5).toFixed(1)} id,  0.0 wa,  0.0 hi,  0.3 si,  0.0 st
+MiB Mem : ${(config.memory * 1024).toFixed(1)} total, ${(config.memory * 102.4).toFixed(1)} free, ${(config.memory * 921.6).toFixed(1)} used, ${(config.memory * 0).toFixed(1)} buff/cache
+MiB Swap: ${(config.memory * 0.5 * 1024).toFixed(1)} total, ${(config.memory * 0.5 * 1024).toFixed(1)} free,      0.0 used. ${(config.memory * 102.4).toFixed(1)} avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+  12847 ${config.username.padEnd(9)} 20   0  ${(config.memory * 900).toFixed(0)}g ${(config.memory * 850).toFixed(0)}g  12876 R  ${(config.cpuCores * 9.8).toFixed(0)}  92.3 ${uptime * 24}:34.56 python3
+  12848 ${config.username.padEnd(9)} 20   0 4521832 234532  45632 S   3.2   0.1   1:23.45 nvidia-smi
+   1234 root      20   0  167892  23456   8932 S   0.3   0.0   0:45.32 systemd`;
+        }
+
+        function generateHtop(config) {
+            return `htop 3.2.1
+CPU Usage: [<span class="success">${Array(Math.floor(config.cpuCores * 0.85 / 10)).fill('|').join('')}</span>${Array(Math.floor(config.cpuCores * 0.15 / 10)).fill(' ').join('')}] ${(85 + Math.random() * 10).toFixed(1)}%
+Memory:    [<span class="warning">${Array(92).fill('|').join('')}</span>${Array(8).fill(' ').join('')}] ${(config.memory * 0.92).toFixed(0)}G/${config.memory}G
+Swap:      [${Array(100).fill(' ').join('')}] 0G/${(config.memory * 0.5).toFixed(0)}G
+
+Running: ${Math.floor(Math.random() * 3) + 1}, Tasks: ${120 + Math.floor(Math.random() * 50)}, Load average: ${(config.cpuCores * 0.8).toFixed(2)}`;
+        }
+
+        function generateDf(config) {
+            const total = config.gpuCount > 1000 ? Math.floor(config.gpuCount / 100) * 10 : 100;
+            const used = Math.floor(total * (0.6 + Math.random() * 0.2));
+            return `Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p2  ${total}T   ${used}T  ${total - used}T  ${Math.floor(used / total * 100)}% /
+/dev/nvme1n1    ${total * 5}T  ${Math.floor(total * 5 * 0.45)}T  ${Math.floor(total * 5 * 0.55)}T  45% /data
+/dev/nvme2n1    ${total * 10}T ${Math.floor(total * 10 * 0.82)}T  ${Math.floor(total * 10 * 0.18)}T  82% /datasets
+tmpfs            ${Math.floor(config.memory / 2)}G    0  ${Math.floor(config.memory / 2)}G   0% /dev/shm`;
+        }
+
+        function generateFree(config) {
+            const total = config.memory * 1024;
+            const used = Math.floor(total * 0.92);
+            const free = total - used;
+            return `               total        used        free      shared  buff/cache   available
+Mem:           ${total}Mi      ${used}Mi       ${free}Mi       156Mi       512Mi       ${free}Mi
+Swap:          ${Math.floor(total * 0.5)}Mi          0Mi    ${Math.floor(total * 0.5)}Mi`;
+        }
+
+        function generateLscpu(config) {
+            return `Architecture:            x86_64
+  CPU op-mode(s):        32-bit, 64-bit
+  Address sizes:         46 bits physical, 57 bits virtual
+  Byte Order:            Little Endian
+CPU(s):                  ${config.cpuCores}
+  On-line CPU(s) list:   0-${config.cpuCores - 1}
+Vendor ID:               GenuineIntel
+  Model name:            Intel(R) Xeon(R) Platinum 8480+
+    CPU family:          6
+    Model:               143
+    Thread(s) per core:  2
+    Core(s) per socket:  ${config.cpuCores / 4}
+    Socket(s):           2
+    CPU max MHz:         3800.0000
+    CPU min MHz:         800.0000`;
+        }
+
+        function generateUptime(config) {
+            const days = Math.floor(Math.random() * 90) + 30;
+            const hours = Math.floor(Math.random() * 24);
+            const mins = Math.floor(Math.random() * 60);
+            const load = (config.cpuCores * 0.8).toFixed(2);
+            return ` ${new Date().toTimeString().split(' ')[0]} up ${days} days, ${hours}:${String(mins).padStart(2, '0')},  3 users,  load average: ${load}, ${load}, ${load}`;
+        }
+
+        async function typeText(element, text, speed) {
+            for (let char of text) {
+                element.textContent += char;
+                await new Promise(resolve => setTimeout(resolve, speed));
+            }
+        }
+
+        async function renderTerminal(config) {
+            const terminal = document.getElementById('terminal');
+            const container = document.getElementById('terminalContainer');
+            const headerTitle = document.getElementById('terminalHeaderTitle');
+            
+            terminal.innerHTML = '';
+            headerTitle.textContent = `${config.username}@${config.hostname}: ~`;
+            container.classList.add('show');
+
+            const content = generateTerminalContent(config);
+            
+            for (let item of content) {
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+
+                if (item.type === 'empty') {
+                    line.innerHTML = '&nbsp;';
+                    terminal.appendChild(line);
+                    continue;
+                }
+
+                if (item.type === 'prompt') {
+                    const promptSpan = document.createElement('span');
+                    promptSpan.innerHTML = item.text;
+                    line.appendChild(promptSpan);
+
+                    if (config.enableTyping) {
+                        const cmdSpan = document.createElement('span');
+                        cmdSpan.className = 'command typing';
+                        line.appendChild(cmdSpan);
+                        terminal.appendChild(line);
+                        
+                        await typeText(cmdSpan, item.command, config.typingSpeed);
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    } else {
+                        const cmdSpan = document.createElement('span');
+                        cmdSpan.className = 'command';
+                        cmdSpan.textContent = item.command;
+                        line.appendChild(cmdSpan);
+                        terminal.appendChild(line);
+                    }
+                } else if (item.type === 'output') {
+                    line.className = 'terminal-line output';
+                    line.innerHTML = item.text;
+                    terminal.appendChild(line);
+                    
+                    if (config.enableTyping) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+
+            if (config.enableCursor) {
+                const cursorLine = document.createElement('div');
+                cursorLine.className = 'terminal-line';
+                cursorLine.innerHTML = `<span class="prompt">${config.username}@${config.hostname}</span>:<span class="header-text">~</span>$ <span class="cursor"></span>`;
+                terminal.appendChild(cursorLine);
+            }
+        }
+
+        function generateDownloadableHTML(config) {
+            const content = generateTerminalContent(config);
+            let terminalHTML = '';
+
+            for (let item of content) {
+                if (item.type === 'empty') {
+                    terminalHTML += '<div class="terminal-line">&nbsp;</div>\n';
+                } else if (item.type === 'prompt') {
+                    terminalHTML += `<div class="terminal-line">${item.text}<span class="command">${item.command}</span></div>\n`;
+                } else if (item.type === 'output') {
+                    terminalHTML += `<div class="terminal-line output">${item.text}</div>\n`;
+                }
+            }
+
+            if (config.enableCursor) {
+                terminalHTML += `<div class="terminal-line"><span class="prompt">${config.username}@${config.hostname}</span>:<span class="header-text">~</span>$ <span class="cursor"></span></div>`;
+            }
+
+            return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${config.username}@${config.hostname} - Ubuntu Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .terminal-wrapper {
+            max-width: 1200px;
+            width: 100%;
+        }
+        .terminal-header {
+            background: #2d2d2d;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .terminal-btn.close { background: #ff5f56; }
+        .terminal-btn.minimize { background: #ffbd2e; }
+        .terminal-btn.maximize { background: #27c93f; }
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #999;
+        }
+        .terminal {
+            background: #300a24;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #fff;
+            overflow-x: auto;
+            min-height: 500px;
+        }
+        .terminal-line {
+            margin-bottom: 2px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .prompt { color: #8ae234; }
+        .command { color: #fff; }
+        .output { color: #d3d7cf; }
+        .header-text { color: #729fcf; }
+        .warning { color: #fce94f; }
+        .success { color: #8ae234; }
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #fff;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        @media (max-width: 768px) {
+            .terminal {
+                font-size: 12px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-wrapper">
+        <div class="terminal-header">
+            <div class="terminal-btn close"></div>
+            <div class="terminal-btn minimize"></div>
+            <div class="terminal-btn maximize"></div>
+            <div class="terminal-title">${config.username}@${config.hostname}: ~</div>
+        </div>
+        <div class="terminal">
+${terminalHTML}
+        </div>
+    </div>
+</body>
+</html>`;
+        }
+
+        function downloadHTML(html, filename) {
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 生成终端
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            currentConfig = getConfig();
+            await renderTerminal(currentConfig);
+        });
+
+        // 下载 HTML
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const config = getConfig();
+            const html = generateDownloadableHTML(config);
+            const filename = `terminal-${config.username}-${config.hostname}-${Date.now()}.html`;
+            downloadHTML(html, filename);
+        });
+
+        document.getElementById('downloadBtn2').addEventListener('click', () => {
+            if (Object.keys(currentConfig).length === 0) {
+                alert('请先生成终端！');
+                return;
+            }
+            const html = generateDownloadableHTML(currentConfig);
+            const filename = `terminal-${currentConfig.username}-${currentConfig.hostname}-${Date.now()}.html`;
+            downloadHTML(html, filename);
+        });
+
+        // 重置配置
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.getElementById('username').value = 'admin';
+            document.getElementById('hostname').value = 'gpu-server-01';
+            document.getElementById('gpuModel').value = 'RTX 4090';
+            document.getElementById('gpuCount').value = '1';
+            document.getElementById('cpuCores').value = '64';
+            document.getElementById('memory').value = '256';
+            document.getElementById('taskName').value = 'GPT-5.1-pretrain';
+            document.getElementById('progress').value = '45';
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('terminalContainer').classList.remove('show');
+        });
+
+        // 初始化
+        window.addEventListener('load', () => {
+            console.log('Ubuntu Terminal Generator loaded!');
+        });
+    </script>
+</body>
+</html>`;

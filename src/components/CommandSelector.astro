@@ -1,0 +1,40 @@
+---
+---
+<div class="config-panel">
+  <!-- Commands -->
+  <div class="section-title" data-lang-key="commands">🔧 显示的命令</div>
+  <div class="command-list" id="commandList">
+    <div class="command-chip selected" data-cmd="nvidia-smi">nvidia-smi</div>
+    <div class="command-chip selected" data-cmd="squeue">squeue (SLURM)</div>
+    <div class="command-chip" data-cmd="top">top</div>
+    <div class="command-chip" data-cmd="htop">htop</div>
+    <div class="command-chip" data-cmd="df">df -h</div>
+    <div class="command-chip" data-cmd="free">free -h</div>
+    <div class="command-chip" data-cmd="lscpu">lscpu</div>
+    <div class="command-chip" data-cmd="uptime">uptime</div>
+  </div>
+
+  <!-- Animation Options -->
+  <div class="animate-options">
+    <div class="checkbox-group">
+      <input type="checkbox" id="enableTyping" checked />
+      <label for="enableTyping" data-lang-key="typingAnimation">打字动画</label>
+    </div>
+    <div class="checkbox-group">
+      <input type="checkbox" id="enableCursor" checked />
+      <label for="enableCursor" data-lang-key="cursorBlink">光标闪烁</label>
+    </div>
+    <div class="form-group" style="flex: 1; max-width: 180px;">
+      <label for="typingSpeed" data-lang-key="typingSpeed">打字速度 (ms)</label>
+      <input type="number" id="typingSpeed" value="30" min="5" max="200" />
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="btn-group">
+    <button class="btn-primary" id="generateBtn" data-lang-key="generate">🚀 生成终端</button>
+    <button class="btn-secondary" id="shareBtn" data-lang-key="share">🔗 分享链接</button>
+    <button class="btn-secondary" id="downloadBtn" data-lang-key="download">💾 下载 HTML</button>
+    <button class="btn-secondary" id="resetBtn" data-lang-key="reset">🔄 重置</button>
+  </div>
+</div>

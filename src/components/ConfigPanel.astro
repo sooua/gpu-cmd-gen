@@ -1,0 +1,80 @@
+---
+---
+<div class="config-panel">
+  <!-- Presets -->
+  <div class="section-title" data-lang-key="quickPresets">📦 快速预设</div>
+  <div class="presets" id="presets">
+    <div class="preset-btn" data-preset="rtx4090">
+      <div class="preset-name" data-lang-key="rtx4090">🎮 RTX 4090 工作站</div>
+      <div class="preset-desc" data-lang-key="rtx4090Desc">单卡 24GB 显存，适合个人开发</div>
+    </div>
+    <div class="preset-btn" data-preset="startup">
+      <div class="preset-name" data-lang-key="startup">🚀 AI创业公司</div>
+      <div class="preset-desc" data-lang-key="startupDesc">8卡 A100 服务器</div>
+    </div>
+    <div class="preset-btn" data-preset="h200">
+      <div class="preset-name" data-lang-key="h200">⚡ 顶级单机</div>
+      <div class="preset-desc" data-lang-key="h200Desc">8卡 H200 超级服务器</div>
+    </div>
+    <div class="preset-btn" data-preset="cluster">
+      <div class="preset-name" data-lang-key="cluster">🏢 超算集群</div>
+      <div class="preset-desc" data-lang-key="clusterDesc">万卡级别训练集群</div>
+    </div>
+  </div>
+
+  <!-- Custom Config -->
+  <div class="section-title" data-lang-key="customConfig">⚙️ 自定义配置</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label data-lang-key="username">用户名</label>
+      <input type="text" id="username" value="admin" placeholder="admin" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label data-lang-key="hostname">主机名</label>
+      <input type="text" id="hostname" value="gpu-server-01" placeholder="gpu-server-01" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label data-lang-key="gpuModel">GPU 型号</label>
+      <select id="gpuModel">
+        <option value="RTX 3090">RTX 3090</option>
+        <option value="RTX 4090" selected>RTX 4090</option>
+        <option value="A40">A40</option>
+        <option value="A100">A100 80GB</option>
+        <option value="V100">V100 32GB</option>
+        <option value="L40S">L40S</option>
+        <option value="H100">H100 80GB</option>
+        <option value="H200">H200 141GB</option>
+        <option value="B200">B200 192GB</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label data-lang-key="gpuCount">GPU 数量</label>
+      <input type="number" id="gpuCount" value="1" min="1" max="16384" />
+    </div>
+    <div class="form-group">
+      <label data-lang-key="cpuCores">CPU 核心数</label>
+      <input type="number" id="cpuCores" value="64" min="1" />
+    </div>
+    <div class="form-group">
+      <label data-lang-key="memory">内存 (GB)</label>
+      <input type="number" id="memory" value="256" min="1" />
+    </div>
+    <div class="form-group">
+      <label data-lang-key="taskName">训练任务名称</label>
+      <input type="text" id="taskName" value="GPT-5.1-pretrain" placeholder="model-training" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label data-lang-key="progress">训练进度 (%)</label>
+      <input type="number" id="progress" value="45" min="0" max="100" />
+    </div>
+  </div>
+
+  <!-- Custom Commands -->
+  <div class="custom-commands-section">
+    <div class="section-title" data-lang-key="customCommands">📝 自定义命令</div>
+    <div id="customCommandsList"></div>
+    <button class="btn-add" id="addCustomCmd" type="button">
+      <span data-lang-key="addCommand">+ 添加命令</span>
+    </button>
+  </div>
+</div>

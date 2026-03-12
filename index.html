@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ubuntu Terminal Generator - 生成逼真的Ubuntu终端界面，支持超算集群、GPU服务器等多种预设">
+    <meta name="keywords" content="Ubuntu, Terminal, Generator, GPU, NVIDIA, SLURM">
+    <title>Ubuntu Terminal Generator - 终端模拟器生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.light-theme {
+            background: #fff;
+            color: #000;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        body.light-theme .top-nav {
+            border-bottom-color: #e5e5e5;
+        }
+
+        .logo-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .logo-section .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        body.light-theme .logo-section .subtitle {
+            color: #666;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .author-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 8px 15px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        body.light-theme .author-info {
+            background: #f5f5f5;
+            border-color: #e5e5e5;
+        }
+
+        .author-info a {
+            color: #0070f3;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s ease;
+        }
+
+        .author-info a:hover {
+            color: #0090ff;
+        }
+
+        .author-info svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 控制按钮组 */
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        body.light-theme .icon-btn {
+            background: #f5f5f5;
+            border-color: #e5e5e5;
+            color: #000;
+        }
+
+        .icon-btn:hover {
+            background: #222;
+            border-color: #666;
+        }
+
+        body.light-theme .icon-btn:hover {
+            background: #e5e5e5;
+            border-color: #ccc;
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        header {
+            margin-bottom: 40px;
+        }
+
+        .config-panel {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        body.light-theme .config-panel {
+            background: #f9f9f9;
+            border-color: #e5e5e5;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        body.light-theme .section-title {
+            border-bottom-color: #e5e5e5;
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .preset-btn {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        body.light-theme .preset-btn {
+            background: #fff;
+            border-color: #e5e5e5;
+            color: #000;
+        }
+
+        .preset-btn:hover {
+            border-color: #666;
+            background: #222;
+        }
+
+        body.light-theme .preset-btn:hover {
+            border-color: #ccc;
+            background: #f5f5f5;
+        }
+
+        .preset-btn.active {
+            border-color: #0070f3;
+            background: #0a1929;
+        }
+
+        body.light-theme .preset-btn.active {
+            border-color: #0070f3;
+            background: #e6f2ff;
+        }
+
+        .preset-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .preset-desc {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        body.light-theme .preset-desc {
+            color: #666;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        body.light-theme label {
+            color: #666;
+        }
+
+        input, select, textarea {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        body.light-theme input,
+        body.light-theme select,
+        body.light-theme textarea {
+            background: #fff;
+            border-color: #e5e5e5;
+            color: #000;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0070f3;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .command-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        body.light-theme .command-section {
+            border-top-color: #e5e5e5;
+        }
+
+        .command-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .command-chip {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        body.light-theme .command-chip {
+            background: #fff;
+            border-color: #e5e5e5;
+            color: #000;
+        }
+
+        .command-chip:hover {
+            border-color: #666;
+        }
+
+        body.light-theme .command-chip:hover {
+            border-color: #ccc;
+        }
+
+        .command-chip.selected {
+            background: #0070f3;
+            border-color: #0070f3;
+            color: #fff;
+        }
+
+        body.light-theme .command-chip.selected {
+            background: #0070f3;
+            border-color: #0070f3;
+            color: #fff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #eee;
+            transform: translateY(-2px);
+        }
+
+        button.secondary {
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+        }
+
+        button.secondary:hover {
+            background: #222;
+        }
+
+        .terminal-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .terminal-container.show {
+            display: block;
+        }
+
+        .terminal-header {
+            background: #2d2d2d;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-btn.close { background: #ff5f56; }
+        .terminal-btn.minimize { background: #ffbd2e; }
+        .terminal-btn.maximize { background: #27c93f; }
+
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .terminal {
+            background: #300a24;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #fff;
+            overflow-x: auto;
+            min-height: 500px;
+        }
+
+        .terminal-line {
+            margin-bottom: 2px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .prompt {
+            color: #8ae234;
+        }
+
+        .command {
+            color: #fff;
+        }
+
+        .output {
+            color: #d3d7cf;
+        }
+
+        .header-text {
+            color: #729fcf;
+        }
+
+        .warning {
+            color: #fce94f;
+        }
+
+        .success {
+            color: #8ae234;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #fff;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .typing {
+            display: inline;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .animate-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid #333;
+            text-align: center;
+            color: #666;
+        }
+
+        body.light-theme footer {
+            border-top-color: #e5e5e5;
+            color: #999;
+        }
+
+        footer a {
+            color: #0070f3;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 语言选择器 */
+        .lang-selector {
+            position: relative;
+        }
+
+        .lang-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        body.light-theme .lang-btn {
+            background: #f5f5f5;
+            border-color: #e5e5e5;
+            color: #000;
+        }
+
+        .lang-btn:hover {
+            background: #222;
+            border-color: #666;
+        }
+
+        body.light-theme .lang-btn:hover {
+            background: #e5e5e5;
+            border-color: #ccc;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 5px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
+            display: none;
+            min-width: 120px;
+            z-index: 1000;
+        }
+
+        body.light-theme .lang-dropdown {
+            background: #fff;
+            border-color: #e5e5e5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .lang-dropdown.show {
+            display: block;
+        }
+
+        .lang-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .lang-option:hover {
+            background: #222;
+        }
+
+        body.light-theme .lang-option:hover {
+            background: #f5f5f5;
+        }
+
+        .lang-option.active {
+            background: #0070f3;
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .top-nav {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .logo-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .nav-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .author-info {
+                order: 1;
+                width: 100%;
+            }
+
+            .control-buttons {
+                order: 2;
+            }
+
+            .presets {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .animate-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-nav">
+            <div class="logo-section">
+                <h1>🖥️ Ubuntu Terminal Generator</h1>
+                <p class="subtitle" data-lang-key="subtitle">生成逼真的Ubuntu终端界面 - 支持超算集群、GPU服务器等多种预设</p>
+            </div>
+            <div class="nav-controls">
+                <div class="author-info">
+                    <span>👨‍💻 Sevion</span>
+                    <a href="https://github.com/sevion" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                    <a href="https://sevion.me" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                        Website
+                    </a>
+                </div>
+                <div class="control-buttons">
+                    <button class="icon-btn" id="themeToggle" title="切换主题">
+                        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"/>
+                            <line x1="12" y1="1" x2="12" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="23"/>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                            <line x1="1" y1="12" x2="3" y2="12"/>
+                            <line x1="21" y1="12" x2="23" y2="12"/>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                        </svg>
+                    </button>
+                    <div class="lang-selector">
+                        <button class="lang-btn" id="langBtn">
+                            <span id="currentLang">🇨🇳 中文</span>
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                <path d="M6 9L1.5 4.5L2.5 3.5L6 7L9.5 3.5L10.5 4.5L6 9Z"/>
+                            </svg>
+                        </button>
+                        <div class="lang-dropdown" id="langDropdown">
+                            <div class="lang-option active" data-lang="zh">🇨🇳 中文</div>
+                            <div class="lang-option" data-lang="en">🇺🇸 English</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <div class="section-title" data-lang-key="quickPresets">📦 快速预设</div>
+            <div class="presets" id="presets">
+                <div class="preset-btn" data-preset="rtx4090">
+                    <div class="preset-name" data-lang-key="rtx4090">🎮 RTX 4090 工作站</div>
+                    <div class="preset-desc" data-lang-key="rtx4090Desc">单卡 24GB 显存，适合个人开发</div>
+                </div>
+                <div class="preset-btn" data-preset="startup">
+                    <div class="preset-name" data-lang-key="startup">🚀 AI创业公司</div>
+                    <div class="preset-desc" data-lang-key="startupDesc">8卡 A100 服务器</div>
+                </div>
+                <div class="preset-btn" data-preset="h200">
+                    <div class="preset-name" data-lang-key="h200">⚡ 顶级单机</div>
+                    <div class="preset-desc" data-lang-key="h200Desc">8卡 H200 超级服务器</div>
+                </div>
+                <div class="preset-btn" data-preset="cluster">
+                    <div class="preset-name" data-lang-key="cluster">🏢 超算集群</div>
+                    <div class="preset-desc" data-lang-key="clusterDesc">万卡级别训练集群</div>
+                </div>
+            </div>
+
+            <div class="section-title" data-lang-key="customConfig">⚙️ 自定义配置</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label data-lang-key="username">用户名</label>
+                    <input type="text" id="username" value="admin" placeholder="admin">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="hostname">主机名</label>
+                    <input type="text" id="hostname" value="gpu-server-01" placeholder="gpu-server-01">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="gpuModel">GPU型号</label>
+                    <select id="gpuModel">
+                        <option value="RTX 4090">RTX 4090</option>
+                        <option value="A100">A100 80GB</option>
+                        <option value="H100">H100 80GB</option>
+                        <option value="H200">H200 141GB</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="gpuCount">GPU数量</label>
+                    <input type="number" id="gpuCount" value="1" min="1" max="16384">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="cpuCores">CPU核心数</label>
+                    <input type="number" id="cpuCores" value="64" min="1">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="memory">内存 (GB)</label>
+                    <input type="number" id="memory" value="256" min="1">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="taskName">训练任务名称</label>
+                    <input type="text" id="taskName" value="GPT-5.1-pretrain" placeholder="model-training">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="progress">训练进度 (%)</label>
+                    <input type="number" id="progress" value="45" min="0" max="100">
+                </div>
+            </div>
+
+            <div class="command-section">
+                <div class="section-title" data-lang-key="commands">🔧 显示的命令</div>
+                <div class="command-list" id="commandList">
+                    <div class="command-chip selected" data-cmd="nvidia-smi">nvidia-smi</div>
+                    <div class="command-chip selected" data-cmd="squeue">squeue (SLURM)</div>
+                    <div class="command-chip" data-cmd="top">top</div>
+                    <div class="command-chip" data-cmd="htop">htop</div>
+                    <div class="command-chip" data-cmd="df">df -h</div>
+                    <div class="command-chip" data-cmd="free">free -h</div>
+                    <div class="command-chip" data-cmd="lscpu">lscpu</div>
+                    <div class="command-chip" data-cmd="uptime">uptime</div>
+                </div>
+
+                <div class="animate-options">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enableTyping" checked>
+                        <label for="enableTyping" data-lang-key="typingAnimation">打字动画</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enableCursor" checked>
+                        <label for="enableCursor" data-lang-key="cursorBlink">光标闪烁</label>
+                    </div>
+                    <div class="form-group" style="flex: 1; max-width: 200px;">
+                        <label data-lang-key="typingSpeed">打字速度 (ms)</label>
+                        <input type="number" id="typingSpeed" value="30" min="10" max="200">
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button id="generateBtn" data-lang-key="generate">🚀 生成终端</button>
+                <button class="secondary" id="downloadBtn" data-lang-key="download">💾 下载 HTML</button>
+                <button class="secondary" id="resetBtn" data-lang-key="reset">🔄 重置配置</button>
+            </div>
+        </div>
+
+        <div class="terminal-container" id="terminalContainer">
+            <div class="terminal-header">
+                <div class="terminal-btn close"></div>
+                <div class="terminal-btn minimize"></div>
+                <div class="terminal-btn maximize"></div>
+                <div class="terminal-title" id="terminalHeaderTitle">ubuntu@terminal</div>
+            </div>
+            <div class="terminal" id="terminal"></div>
+            <div class="download-section">
+                <button id="downloadBtn2" data-lang-key="downloadTerminal">💾 下载终端 HTML</button>
+            </div>
+        </div>
+
+        <footer>
+            <p><span data-lang-key="footer1">Made with ❤️ by</span> <a href="https://sevion.me" target="_blank">Sevion</a></p>
+            <p style="margin-top: 10px;">
+                <a href="https://github.com/sevion/ubuntu-terminal-generator" target="_blank" data-lang-key="footer2">View on GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
