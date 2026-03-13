@@ -31,6 +31,16 @@ const {
 
   <title>{title}</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- ── AI crawler / scraper restrictions ── -->
+  <!-- Standard noai directives (DeviantArt / Spawning spec) -->
+  <meta name="robots" content="noai, noimageai" />
+  <!-- Opt out of Google AI training -->
+  <meta name="google" content="nositelinkssearchbox" />
+  <!-- TDM (Text & Data Mining) opt-out — EU DSA / AI Act spec -->
+  <meta name="tdm-reservation" content="1" />
+  <!-- Content policy signal for scrapers that respect it -->
+  <meta name="ai-content-policy" content="disallow-training" />
 </head>
 <body>
   <slot />

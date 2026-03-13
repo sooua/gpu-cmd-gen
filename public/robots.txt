@@ -1,0 +1,101 @@
+# ============================================================
+# robots.txt — AI crawler & scraper restrictions
+# ============================================================
+
+# ── OpenAI / ChatGPT ────────────────────────────────────────
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+# ── Anthropic / Claude ──────────────────────────────────────
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+# ── Google AI (Gemini / Bard training) ──────────────────────
+User-agent: Google-Extended
+Disallow: /
+
+# ── Common Crawl (training data for many LLMs) ──────────────
+User-agent: CCBot
+Disallow: /
+
+# ── Meta / Facebook AI ──────────────────────────────────────
+User-agent: FacebookBot
+Disallow: /
+
+# ── ByteDance / TikTok ──────────────────────────────────────
+User-agent: Bytespider
+Disallow: /
+
+# ── Cohere AI ───────────────────────────────────────────────
+User-agent: cohere-ai
+Disallow: /
+
+# ── Diffbot ─────────────────────────────────────────────────
+User-agent: Diffbot
+Disallow: /
+
+# ── Omgili / Webz.io ────────────────────────────────────────
+User-agent: omgili
+Disallow: /
+
+User-agent: omgilibot
+Disallow: /
+
+# ── DataForSEO scraper ──────────────────────────────────────
+User-agent: DataForSeoBot
+Disallow: /
+
+# ── PerplexityBot ───────────────────────────────────────────
+User-agent: PerplexityBot
+Disallow: /
+
+# ── YouBot ──────────────────────────────────────────────────
+User-agent: YouBot
+Disallow: /
+
+# ── Amazon Alexa / Silk ─────────────────────────────────────
+User-agent: Amazonbot
+Disallow: /
+
+# ── Applebot (Apple AI training) ────────────────────────────
+User-agent: Applebot-Extended
+Disallow: /
+
+# ── Generic AI scrapers ─────────────────────────────────────
+User-agent: TurnitinBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+# ── Allow legitimate search engines ────────────────────────
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# ── Default: allow all other bots ───────────────────────────
+User-agent: *
+Allow: /
