@@ -2,7 +2,7 @@
 ---
 <div class="config-panel">
   <!-- Presets -->
-  <div class="section-title" data-lang-key="quickPresets">📦 快速预设</div>
+  <div class="section-title" data-lang-key="quickPresets">Quick Presets</div>
   <div class="presets" id="presets">
     <div class="preset-btn" data-preset="rtx4090">
       <div class="preset-name" data-lang-key="rtx4090">🎮 RTX 4090 工作站</div>
@@ -23,7 +23,7 @@
   </div>
 
   <!-- Custom Config -->
-  <div class="section-title" data-lang-key="customConfig">⚙️ 自定义配置</div>
+  <div class="section-title" data-lang-key="customConfig">Custom Config</div>
   <div class="form-grid">
     <div class="form-group">
       <label data-lang-key="username">用户名</label>
@@ -36,15 +36,15 @@
     <div class="form-group">
       <label data-lang-key="gpuModel">GPU 型号</label>
       <select id="gpuModel">
-        <option value="RTX 3090">RTX 3090</option>
-        <option value="RTX 4090" selected>RTX 4090</option>
-        <option value="A40">A40</option>
-        <option value="A100">A100 80GB</option>
-        <option value="V100">V100 32GB</option>
-        <option value="L40S">L40S</option>
-        <option value="H100">H100 80GB</option>
-        <option value="H200">H200 141GB</option>
-        <option value="B200">B200 192GB</option>
+        <option value="RTX 3090">RTX 3090 · 24 GB</option>
+        <option value="RTX 4090" selected>RTX 4090 · 24 GB</option>
+        <option value="A40">A40 · 48 GB</option>
+        <option value="V100">V100 · 32 GB</option>
+        <option value="A100">A100 · 80 GB</option>
+        <option value="L40S">L40S · 48 GB</option>
+        <option value="H100">H100 · 80 GB</option>
+        <option value="H200">H200 · 141 GB</option>
+        <option value="B200">B200 · 192 GB</option>
       </select>
     </div>
     <div class="form-group">
@@ -71,7 +71,7 @@
 
   <!-- Custom Commands -->
   <div class="custom-commands-section">
-    <div class="section-title" data-lang-key="customCommands">📝 自定义命令</div>
+    <div class="section-title" data-lang-key="customCommands">Custom Commands</div>
     <div id="customCommandsList"></div>
     <button class="btn-add" id="addCustomCmd" type="button">
       <span data-lang-key="addCommand">+ 添加命令</span>
