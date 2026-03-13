@@ -44,7 +44,26 @@ const {
 </head>
 <body>
   <slot />
-  <!-- Toast notification -->
   <div class="toast" id="toast"></div>
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Block F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+    document.addEventListener('keydown', e => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      const key  = e.key.toLowerCase();
+
+      if (
+        e.key === 'F12' ||
+        (ctrl && key === 'u') ||
+        (ctrl && key === 's') ||
+        (ctrl && e.shiftKey && ['i', 'j', 'c'].includes(key))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+  </script>
 </body>
 </html>
